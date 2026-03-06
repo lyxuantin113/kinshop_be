@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UserService } from './user.service';
 import { RegisterSchema, LoginSchema } from './user.dto';
+import { PaginationQuerySchema } from '../../common/dto/pagination.dto';
 
 export class UserController {
     constructor(private readonly userService: UserService) { }
@@ -69,11 +70,13 @@ export class UserController {
      */
     getAll = async (req: Request, res: Response) => {
         try {
-            const users = await this.userService.getAllUsers();
-            res.status(200).json({
-                data: users,
-            });
+            const { page, limit } = PaginationQuerySchema.parse(req.query);
+            const result = await this.userService.getAllUsers({ page, limit });
+            res.status(200).json(result);
         } catch (error: any) {
+            if (error.name === 'ZodError') {
+                return res.status(400).json({ message: 'Invalid pagination parameters' });
+            }
             res.status(500).json({
                 message: 'Error fetching users',
             });

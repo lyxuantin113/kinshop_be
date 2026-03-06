@@ -25,7 +25,7 @@ describe('UserService', () => {
             const createdUser: User = {
                 id: 'uuid-123',
                 email: 'test@example.com',
-                password: 'hashed_password', // Giả sử trong DB là mật khẩu đã hash
+                password: 'hashed_password',
                 name: 'Test User',
                 role: Role.USER,
                 createdAt: new Date(),
@@ -99,6 +99,22 @@ describe('UserService', () => {
             } as User);
 
             await expect(userService.login(loginData)).rejects.toThrow('Invalid email or password');
+        });
+    });
+
+    describe('getAllUsers', () => {
+        it('should return paginated user list', async () => {
+            const users: User[] = [
+                { id: '1', email: 'u1@e.com', password: 'h1', name: 'U1', role: Role.USER, createdAt: new Date(), updatedAt: new Date() }
+            ];
+
+            userRepositoryMock.findAll.mockResolvedValue({ data: users, total: 1 });
+
+            const result = await userService.getAllUsers({ page: 1, limit: 10 });
+
+            expect(result.data).toHaveLength(1);
+            expect(result.meta.totalItems).toBe(1);
+            expect((result.data[0] as any).password).toBeUndefined();
         });
     });
 });

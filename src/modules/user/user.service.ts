@@ -2,6 +2,7 @@ import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { UserRepository } from './user.repository';
 import { RegisterInput, LoginInput } from './user.dto';
+import { PaginatedResponse, getPaginationMeta } from '../../common/utils/pagination';
 
 export class UserService {
     constructor(private readonly userRepository: UserRepository) { }
@@ -67,8 +68,18 @@ export class UserService {
         return user ? this.excludePassword(user) : null;
     }
 
-    async getAllUsers(): Promise<Omit<User, 'password'>[]> {
-        const users = await this.userRepository.findAll();
-        return users.map((user) => this.excludePassword(user));
+    async getAllUsers(params: { page: number; limit: number }): Promise<PaginatedResponse<Omit<User, 'password'>>> {
+        const { page, limit } = params;
+        const skip = (page - 1) * limit;
+
+        const { data, total } = await this.userRepository.findAll({
+            skip,
+            take: limit
+        });
+
+        return {
+            data: data.map((user) => this.excludePassword(user)),
+            meta: getPaginationMeta(total, page, limit)
+        };
     }
 }

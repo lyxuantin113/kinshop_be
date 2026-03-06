@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import pino from 'pino';
 
 import userRoutes from './modules/user/user.routes';
+import categoryRoutes from './modules/category/category.routes';
+import productRoutes from './modules/product/product.routes';
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);
 
 // Basic Health Check
 app.get('/health', (req: Request, res: Response) => {

@@ -1,30 +1,19 @@
-import { Prisma, User } from '@prisma/client';
+import { User, Prisma } from '@prisma/client';
 import prisma from '../../config/database';
 
 export class UserRepository {
-    /**
-     * Tìm người dùng theo Email
-     * Đầy là một thao tác đọc (Read) cơ bản từ DB.
-     */
     async findByEmail(email: string): Promise<User | null> {
         return prisma.user.findUnique({
             where: { email },
         });
     }
 
-    /**
-     * Tạo người dùng mới
-     * Nhận vào dữ liệu (DTO) và trả về User đã tạo.
-     */
     async create(data: Prisma.UserCreateInput): Promise<User> {
         return prisma.user.create({
             data,
         });
     }
 
-    /**
-     * Tìm người dùng theo ID
-     */
     async findById(id: string): Promise<User | null> {
         return prisma.user.findUnique({
             where: { id },
@@ -32,9 +21,18 @@ export class UserRepository {
     }
 
     /**
-     * Lấy danh sách tất cả người dùng
+     * Senior Level: Parallel Count & Find
      */
-    async findAll(): Promise<User[]> {
-        return prisma.user.findMany();
+    async findAll(params: { skip: number; take: number }): Promise<{ data: User[]; total: number }> {
+        const [data, total] = await prisma.$transaction([
+            prisma.user.findMany({
+                orderBy: { createdAt: 'desc' },
+                skip: params.skip,
+                take: params.take,
+            }),
+            prisma.user.count()
+        ]);
+
+        return { data, total };
     }
 }
