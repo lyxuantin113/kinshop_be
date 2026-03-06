@@ -1,0 +1,16 @@
+# Docker Configuration
+node_modules
+dist
+.env
+*.log
+npm-debug.log*
+
+# Prisma
+/prisma/migrations
+/prisma/*.db
+
+# IDE
+.vscode
+.idea
+.swp
+.swo
