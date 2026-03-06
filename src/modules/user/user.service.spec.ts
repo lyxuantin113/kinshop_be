@@ -3,6 +3,14 @@ import { UserRepository } from './user.repository';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { User, Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import redis from '../../config/redis';
+
+// Mock Redis
+jest.mock('../../config/redis', () => ({
+    set: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn()
+}));
 
 describe('UserService', () => {
     let userService: UserService;
@@ -11,6 +19,7 @@ describe('UserService', () => {
     beforeEach(() => {
         userRepositoryMock = mockDeep<UserRepository>();
         userService = new UserService(userRepositoryMock);
+        jest.clearAllMocks();
     });
 
     describe('register', () => {
@@ -62,7 +71,7 @@ describe('UserService', () => {
     });
 
     describe('login', () => {
-        it('should return user without password on successful login', async () => {
+        it('should return user and tokens on successful login', async () => {
             const loginData = {
                 email: 'test@example.com',
                 password: 'password123'
@@ -83,8 +92,10 @@ describe('UserService', () => {
 
             const result = await userService.login(loginData);
 
-            expect((result as any).password).toBeUndefined();
-            expect(result.id).toBe('uuid-123');
+            expect(result.user.id).toBe('uuid-123');
+            expect(result.accessToken).toBeDefined();
+            expect(result.refreshToken).toBeDefined();
+            expect(redis.set).toHaveBeenCalled();
         });
 
         it('should throw error for incorrect password', async () => {
@@ -99,6 +110,23 @@ describe('UserService', () => {
             } as User);
 
             await expect(userService.login(loginData)).rejects.toThrow('Invalid email or password');
+        });
+    });
+
+    describe('refreshToken', () => {
+        it('should generate new tokens if refresh token is valid', async () => {
+            const oldToken = 'valid-refresh-token';
+            // Mock verify
+            const jwt = require('jsonwebtoken');
+            jest.spyOn(jwt, 'verify').mockReturnValue({ userId: 'uuid-123', role: Role.USER });
+
+            (redis.get as jest.Mock).mockResolvedValue(oldToken);
+
+            const result = await userService.refreshToken(oldToken);
+
+            expect(result.accessToken).toBeDefined();
+            expect(result.refreshToken).toBeDefined();
+            expect(redis.set).toHaveBeenCalled();
         });
     });
 
