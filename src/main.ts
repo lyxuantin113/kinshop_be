@@ -7,6 +7,7 @@ import pino from 'pino';
 import userRoutes from './modules/user/user.routes';
 import categoryRoutes from './modules/category/category.routes';
 import productRoutes from './modules/product/product.routes';
+import { errorMiddleware } from './common/middleware/error.middleware';
 
 dotenv.config();
 
@@ -34,8 +35,10 @@ app.use('/api/products', productRoutes);
 
 // Basic Health Check
 app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({ status: 'OK', message: 'Kin Shop Backend is running' });
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+app.use(errorMiddleware);
 
 app.listen(port, () => {
     logger.info(`[server]: Server is running at http://localhost:${port}`);
