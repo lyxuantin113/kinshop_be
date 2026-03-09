@@ -1,6 +1,6 @@
 import { Product, ProductImage } from '@prisma/client';
 import { ProductRepository, CreateProductInputWithImages } from './product.repository';
-import { CreateProductInput } from './product.dto';
+import { CreateProductInput, ProductQuery } from './product.dto';
 import { PaginatedResponse, getPaginationMeta } from '../../common/utils/pagination';
 
 export class ProductService {
@@ -23,14 +23,14 @@ export class ProductService {
     }
 
     /**
-     * Senior Level: Optimized pagination logic in Service
+     * Senior Level: Optimized pagination + dynamic filtering logic
      */
-    async getAllProducts(params: { categoryId?: string; page: number; limit: number }): Promise<PaginatedResponse<Product>> {
-        const { page, limit, categoryId } = params;
+    async getAllProducts(query: ProductQuery): Promise<PaginatedResponse<Product>> {
+        const { page, limit, ...filters } = query;
         const skip = (page - 1) * limit;
 
         const { data, total } = await this.productRepository.findAll({
-            categoryId,
+            ...filters,
             skip,
             take: limit
         });

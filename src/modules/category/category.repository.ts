@@ -14,9 +14,6 @@ export class CategoryRepository {
         return prisma.category.findUnique({ where: { slug } });
     }
 
-    /**
-     * Senior Level: Parallel Count & Find
-     */
     async findAll(params: { skip: number; take: number }): Promise<{ data: Category[]; total: number }> {
         const [data, total] = await prisma.$transaction([
             prisma.category.findMany({

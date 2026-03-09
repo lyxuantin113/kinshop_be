@@ -24,6 +24,7 @@ export class JwtUtil {
         return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
     }
 
+    // Nhớ gôm lại 1 verify 
     static verifyAccessToken(token: string): TokenPayload {
         return jwt.verify(token, ACCESS_TOKEN_SECRET) as TokenPayload;
     }

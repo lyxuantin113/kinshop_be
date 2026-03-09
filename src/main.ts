@@ -8,6 +8,8 @@ import pino from 'pino';
 import userRoutes from './modules/user/user.routes';
 import categoryRoutes from './modules/category/category.routes';
 import productRoutes from './modules/product/product.routes';
+import cartRoutes from './modules/cart/cart.routes';
+import orderRoutes from './modules/order/order.routes';
 import { errorMiddleware } from './common/middleware/error.middleware';
 
 dotenv.config();
@@ -34,6 +36,8 @@ app.use(cookieParser());
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Basic Health Check
 app.get('/health', (req: Request, res: Response) => {

@@ -5,6 +5,17 @@ export interface CreateProductInputWithImages extends Omit<Prisma.ProductUncheck
     images?: Prisma.ProductImageCreateWithoutProductInput[];
 }
 
+export interface ProductFilterParams {
+    categoryId?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: 'price' | 'createdAt' | 'name';
+    sortOrder?: 'asc' | 'desc';
+    skip: number;
+    take: number;
+}
+
 export class ProductRepository {
     async create(data: CreateProductInputWithImages): Promise<Product & { images: ProductImage[] }> {
         const { images, ...productData } = data;
@@ -24,11 +35,34 @@ export class ProductRepository {
     }
 
     /**
-     * Senior Level: Parallel Count & Find using Transaction
+     * Senior Level: Advanced Dynamic Filtering & Search
      */
-    async findAll(params: { categoryId?: string; skip: number; take: number }): Promise<{ data: Product[]; total: number }> {
-        const where: Prisma.ProductWhereInput = params.categoryId ? { categoryId: params.categoryId } : {};
+    async findAll(params: ProductFilterParams): Promise<{ data: Product[]; total: number }> {
+        const { categoryId, search, minPrice, maxPrice, sortBy, sortOrder, skip, take } = params;
 
+        // 1. Build Dynamic Where Clause
+        const where: Prisma.ProductWhereInput = {
+            // Category filter
+            ...(categoryId && { categoryId }),
+
+            // Global Search (Name or Description)
+            ...(search && {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } },
+                ],
+            }),
+
+            // Price Range filter
+            ...((minPrice !== undefined || maxPrice !== undefined) && {
+                price: {
+                    ...(minPrice !== undefined && { gte: minPrice }),
+                    ...(maxPrice !== undefined && { lte: maxPrice }),
+                },
+            }),
+        };
+
+        // 2. Execute parallel query
         const [data, total] = await prisma.$transaction([
             prisma.product.findMany({
                 where,
@@ -39,9 +73,9 @@ export class ProductRepository {
                     },
                     category: true
                 },
-                skip: params.skip,
-                take: params.take,
-                orderBy: { createdAt: 'desc' }
+                skip,
+                take,
+                orderBy: { [sortBy || 'createdAt']: sortOrder || 'desc' }
             }),
             prisma.product.count({ where })
         ]);

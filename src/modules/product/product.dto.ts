@@ -19,3 +19,19 @@ export const CreateProductSchema = z.object({
 });
 
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
+
+/**
+ * Advanced Product Query Schema
+ */
+export const ProductQuerySchema = z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(100).default(10),
+    categoryId: z.string().uuid().optional(),
+    search: z.string().optional(),
+    minPrice: z.coerce.number().nonnegative().optional(),
+    maxPrice: z.coerce.number().positive().optional(),
+    sortBy: z.enum(['price', 'createdAt', 'name']).default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type ProductQuery = z.infer<typeof ProductQuerySchema>;

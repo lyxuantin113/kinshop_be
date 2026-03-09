@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { ProductService } from './product.service';
-import { CreateProductSchema } from './product.dto';
-import { PaginationQuerySchema } from '../../common/dto/pagination.dto';
+import { CreateProductSchema, ProductQuerySchema } from './product.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
 
@@ -14,16 +13,17 @@ export class ProductController {
         res.status(201).json({ data: product });
     });
 
+    /**
+     * Senior Level: Clean Controller with advanced query validation
+     */
     getAll = asyncHandler(async (req: Request, res: Response) => {
-        const { page, limit } = PaginationQuerySchema.parse(req.query);
-        const categoryId = req.query.categoryId as string | undefined;
+        // 1. Validate full query complex object (page, limit, search, price range, etc.)
+        const query = ProductQuerySchema.parse(req.query);
 
-        const result = await this.productService.getAllProducts({
-            page,
-            limit,
-            categoryId
-        });
+        // 2. Call service with typed query
+        const result = await this.productService.getAllProducts(query);
 
+        // 3. Standardized Response
         res.status(200).json(result);
     });
 

@@ -3,13 +3,12 @@ import { ZodError } from 'zod';
 import { AppError } from '../errors/app-error';
 
 /**
- * Senior Level Global Error Handler
+ * Global Error Handler
  */
 export const errorMiddleware = (
     err: any,
     req: Request,
     res: Response,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: NextFunction
 ) => {
     let statusCode = err.statusCode || 500;
@@ -42,7 +41,7 @@ export const errorMiddleware = (
     }
 
     // Log unexpected errors for developers
-    console.error('ERROR 💥:', err);
+    console.error('ERROR: ', err);
 
     res.status(statusCode).json({
         status: 'error',
