@@ -14,3 +14,8 @@ npm-debug.log*
 .idea
 .swp
 .swo
+
+# File note
+explain_test.txt
+GCP_GUIDE.md
+verify-gcp.ts

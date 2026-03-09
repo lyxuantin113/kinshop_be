@@ -1,0 +1,25 @@
+# Dependency & Build artifacts
+node_modules
+dist
+npm-debug.log
+
+# Version Control
+.git
+
+# Environment & Secrets
+.env
+.env.*
+
+# Docker specific
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation & Tools
+README.md
+GCP_GUIDE.md
+explain_test.txt
+
+# Tests
+src/tests
+jest.config.js

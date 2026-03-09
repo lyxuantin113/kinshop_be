@@ -12,6 +12,7 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "isolatedModules": true,
+        "resolveJsonModule": true,
         "baseUrl": ".",
         "paths": {
             "@modules/*": [

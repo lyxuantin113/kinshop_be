@@ -13,6 +13,8 @@ import discountRoutes from './modules/discount/discount.routes';
 import systemConfigRoutes from './modules/system-config/system-config.routes';
 import { errorMiddleware } from './common/middleware/error.middleware';
 import { standardRateLimiter } from './common/middleware/rate-limit.middleware';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './docs/swagger.json';
 
 dotenv.config();
 
@@ -22,7 +24,12 @@ const app: Express = express();
 app.use(helmet());
 
 // Strict CORS Policy
-const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+const frontendUrl = process.env.FRONTEND_URL;
+const allowedOrigins = [
+    ...(frontendUrl ? frontendUrl.split(',') : []), // Cho phép truyền nhiều URL cách nhau bằng dấu phẩy
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl)
@@ -57,6 +64,9 @@ app.use('/api/system-configs', systemConfigRoutes);
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(errorMiddleware);
 
