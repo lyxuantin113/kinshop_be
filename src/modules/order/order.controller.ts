@@ -10,7 +10,8 @@ export class OrderController {
         const userId = req.user?.id;
         if (!userId) throw new AppError('Unauthorized', 401);
 
-        const order = await this.orderService.checkout(userId);
+        const { couponCode } = req.body;
+        const order = await this.orderService.checkout(userId, couponCode);
 
         res.status(201).json({
             status: 'success',

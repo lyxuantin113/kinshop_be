@@ -7,13 +7,18 @@ import { CartRepository } from '../cart/cart.repository';
 import { ProductRepository } from '../product/product.repository';
 import { protect } from '../../common/middleware/auth.middleware';
 
+import { DiscountService } from '../discount/discount.service';
+import { DiscountRepository } from '../discount/discount.repository';
+
 const router = Router();
 
 const orderRepository = new OrderRepository();
 const cartRepository = new CartRepository();
 const productRepository = new ProductRepository();
 const shippingService = new ShippingService();
-const orderService = new OrderService(orderRepository, cartRepository, productRepository, shippingService);
+const discountRepository = new DiscountRepository();
+const discountService = new DiscountService(discountRepository);
+const orderService = new OrderService(orderRepository, cartRepository, productRepository, shippingService, discountService);
 const orderController = new OrderController(orderService);
 
 router.use(protect);

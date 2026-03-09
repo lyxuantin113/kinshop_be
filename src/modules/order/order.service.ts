@@ -2,6 +2,7 @@ import { OrderRepository } from './order.repository';
 import { CartRepository } from '../cart/cart.repository';
 import { ProductRepository } from '../product/product.repository';
 import { ShippingService } from './shipping.service';
+import { DiscountService } from '../discount/discount.service';
 import prisma from '../../config/database';
 import { AppError } from '../../common/errors/app-error';
 import { Order, OrderStatus } from '@prisma/client';
@@ -11,13 +12,14 @@ export class OrderService {
         private readonly orderRepository: OrderRepository,
         private readonly cartRepository: CartRepository,
         private readonly productRepository: ProductRepository,
-        private readonly shippingService: ShippingService
+        private readonly shippingService: ShippingService,
+        private readonly discountService: DiscountService
     ) { }
 
     /**
      * Critical Checkout Logic with Shipping & Concurrency
      */
-    async checkout(userId: string): Promise<Order> {
+    async checkout(userId: string, couponCode?: string): Promise<Order> {
         const cart = await this.cartRepository.getByUserId(userId);
         if (!cart || cart.items.length === 0) {
             throw new AppError('Cart is empty', 400);
@@ -37,17 +39,32 @@ export class OrderService {
             });
         }
 
-        // Calculate Shipping
+        // 1. Calculate Shipping
         const shippingFee = this.shippingService.calculateShippingFee(subtotal);
-        const totalAmount = subtotal + shippingFee;
+
+        // 2. Handle Discount if coupon provided
+        let discountAmount = 0;
+        let discountId: string | undefined;
+        let discountToUpdate: any;
+
+        if (couponCode) {
+            const discount = await this.discountService.validateDiscount(couponCode, subtotal, cart.items);
+            discountAmount = this.discountService.calculateDiscountAmount(discount, subtotal, cart.items);
+            discountId = discount.id;
+            discountToUpdate = discount;
+        }
+
+        const totalAmount = subtotal + shippingFee - discountAmount;
 
         return await prisma.$transaction(async (tx) => {
-            // 1. Create Order
+            // 3. Create Order
             const order = await tx.order.create({
                 data: {
                     userId,
                     subtotal,
                     shippingFee,
+                    discountAmount,
+                    discountId,
                     totalAmount,
                     status: OrderStatus.PENDING,
                     items: {
@@ -59,12 +76,33 @@ export class OrderService {
                 }
             });
 
-            // 2. Atomic Stock Update (Optimistic Locking)
+            // 4. Update Discount usage (Optimistic Locking)
+            if (discountToUpdate) {
+                const discountUpdateResult = await tx.discount.updateMany({
+                    where: {
+                        id: discountToUpdate.id,
+                        version: discountToUpdate.version,
+                        // Safety check against race conditions even with validation before transaction
+                        OR: [
+                            { usageLimit: null },
+                            { usedCount: { lt: discountToUpdate.usageLimit } }
+                        ]
+                    },
+                    data: {
+                        usedCount: { increment: 1 },
+                        version: { increment: 1 }
+                    }
+                });
+
+                if (discountUpdateResult.count === 0) {
+                    throw new AppError('Coupon is no longer available or was concurrently updated.', 409);
+                }
+            }
+
             for (const item of cart.items) {
                 const updateResult = await tx.product.updateMany({
                     where: {
                         id: item.productId,
-                        version: item.product.version,
                         stock: { gte: item.quantity }
                     },
                     data: {
@@ -81,7 +119,7 @@ export class OrderService {
                 }
             }
 
-            // 3. Clear cart
+            // 6. Clear cart
             await tx.cartItem.deleteMany({
                 where: { cartId: cart.id }
             });

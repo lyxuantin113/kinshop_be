@@ -33,7 +33,11 @@ export class CartRepository {
 
     async addItem(cartId: string, productId: string, quantity: number): Promise<CartItem> {
         return prisma.cartItem.create({
-            data: { cartId, productId, quantity },
+            data: {
+                cart: { connect: { id: cartId } },
+                product: { connect: { id: productId } },
+                quantity,
+            },
         });
     }
 
