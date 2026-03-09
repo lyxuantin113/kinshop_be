@@ -30,4 +30,10 @@ export class DiscountRepository {
             orderBy: { createdAt: 'desc' }
         });
     }
+
+    async delete(id: string): Promise<void> {
+        await prisma.discount.delete({
+            where: { id }
+        });
+    }
 }

@@ -7,6 +7,7 @@ import { AppError } from '../errors/app-error';
 export const standardRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    skip: () => process.env.NODE_ENV === 'test',
     message: {
         status: 'fail',
         message: 'Too many requests from this IP, please try again after 15 minutes'
@@ -22,6 +23,7 @@ export const standardRateLimiter = rateLimit({
 export const authRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 10,
+    skip: () => process.env.NODE_ENV === 'test',
     handler: (req, res, next, options) => {
         throw new AppError(options.message.message, 429);
     },

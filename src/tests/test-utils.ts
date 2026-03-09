@@ -5,13 +5,16 @@ export const cleanupDatabase = async () => {
         Array<{ tablename: string }>
     >`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT LIKE '_prisma_migrations';`;
 
-    for (const { tablename } of tablenames) {
-        if (tablename !== '_prisma_migrations') {
-            try {
-                await prisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE;`);
-            } catch (error) {
-                console.log({ error });
-            }
+    const tables = tablenames
+        .map(t => `"${t.tablename}"`)
+        .filter(t => t !== '"_prisma_migrations"')
+        .join(', ');
+
+    if (tables) {
+        try {
+            await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
+        } catch (error) {
+            console.error('Cleanup error:', error);
         }
     }
 };
@@ -27,20 +30,33 @@ export const createTestUser = async (email: string = 'test@example.com') => {
     });
 };
 
+export const createTestAdmin = async (email: string = 'admin@example.com') => {
+    return await prisma.user.create({
+        data: {
+            email,
+            password: 'hashed_password',
+            name: 'Admin User',
+            role: 'ADMIN',
+        },
+    });
+};
+
 export const createTestCategory = async (name: string = 'Electronics') => {
+    const uniqueName = `${name}-${Math.random()}`;
     return await prisma.category.create({
         data: {
-            name,
-            slug: name.toLowerCase().replace(/\s+/g, '-'),
+            name: uniqueName,
+            slug: `${uniqueName.toLowerCase().replace(/\s+/g, '-')}-${Math.random()}`,
         },
     });
 };
 
 export const createTestProduct = async (categoryId: string, name: string = 'Laptop', price: number = 1000, stock: number = 10) => {
+    const uniqueName = `${name}-${Math.random()}`;
     return await prisma.product.create({
         data: {
-            name,
-            slug: `${name.toLowerCase()}-${Math.random()}`,
+            name: uniqueName,
+            slug: `${uniqueName.toLowerCase()}-${Math.random()}`,
             price,
             stock,
             categoryId,

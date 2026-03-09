@@ -21,7 +21,7 @@ export class UserRepository {
     }
 
     /**
-     * Senior Level: Parallel Count & Find
+     * Lấy danh sách tất cả người dùng
      */
     async findAll(params: { skip: number; take: number }): Promise<{ data: User[]; total: number }> {
         const [data, total] = await prisma.$transaction([

@@ -16,9 +16,6 @@ export class OrderService {
         private readonly discountService: DiscountService
     ) { }
 
-    /**
-     * Critical Checkout Logic with Shipping & Concurrency
-     */
     async checkout(userId: string, couponCode?: string): Promise<Order> {
         const cart = await this.cartRepository.getByUserId(userId);
         if (!cart || cart.items.length === 0) {
@@ -39,10 +36,8 @@ export class OrderService {
             });
         }
 
-        // 1. Calculate Shipping
-        const shippingFee = this.shippingService.calculateShippingFee(subtotal);
+        const shippingFee = await this.shippingService.calculateShippingFee(subtotal);
 
-        // 2. Handle Discount if coupon provided
         let discountAmount = 0;
         let discountId: string | undefined;
         let discountToUpdate: any;
@@ -57,7 +52,6 @@ export class OrderService {
         const totalAmount = subtotal + shippingFee - discountAmount;
 
         return await prisma.$transaction(async (tx) => {
-            // 3. Create Order
             const order = await tx.order.create({
                 data: {
                     userId,
@@ -76,13 +70,11 @@ export class OrderService {
                 }
             });
 
-            // 4. Update Discount usage (Optimistic Locking)
             if (discountToUpdate) {
                 const discountUpdateResult = await tx.discount.updateMany({
                     where: {
                         id: discountToUpdate.id,
                         version: discountToUpdate.version,
-                        // Safety check against race conditions even with validation before transaction
                         OR: [
                             { usageLimit: null },
                             { usedCount: { lt: discountToUpdate.usageLimit } }
@@ -119,7 +111,6 @@ export class OrderService {
                 }
             }
 
-            // 6. Clear cart
             await tx.cartItem.deleteMany({
                 where: { cartId: cart.id }
             });
@@ -141,5 +132,28 @@ export class OrderService {
         }
 
         return order;
+    }
+
+    async getAllOrders(params: { page: number; limit: number; status?: OrderStatus; userId?: string }) {
+        return this.orderRepository.findAll(params);
+    }
+
+    async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {
+        const order = await this.orderRepository.findById(orderId);
+        if (!order) throw new AppError('Order not found', 404);
+
+        if (order.status === OrderStatus.CANCELLED && status !== OrderStatus.CANCELLED) {
+            throw new AppError('Cannot update status of a cancelled order', 400);
+        }
+
+        if (order.status === OrderStatus.DELIVERED && status === OrderStatus.CANCELLED) {
+            throw new AppError('Cannot cancel a delivered order', 400);
+        }
+
+        return this.orderRepository.updateStatus(orderId, status);
+    }
+
+    async getDashboardStats() {
+        return this.orderRepository.getStats();
     }
 }

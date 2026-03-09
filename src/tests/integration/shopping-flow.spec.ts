@@ -7,6 +7,8 @@ import { ProductRepository } from '../../modules/product/product.repository';
 import { ShippingService } from '../../modules/order/shipping.service';
 import { DiscountService } from '../../modules/discount/discount.service';
 import { DiscountRepository } from '../../modules/discount/discount.repository';
+import { SystemConfigService } from '../../modules/system-config/system-config.service';
+import { SystemConfigRepository } from '../../modules/system-config/system-config.repository';
 import { cleanupDatabase, createTestUser, createTestCategory, createTestProduct, createTestDiscount } from '../test-utils';
 import prisma, { pool } from '../../config/database';
 import redis from '../../config/redis';
@@ -19,12 +21,17 @@ describe('Shopping Flow Integration', () => {
     let productRepository: ProductRepository;
     let shippingService: ShippingService;
     let discountService: DiscountService;
+    let systemConfigService: SystemConfigService;
 
     beforeAll(async () => {
         cartRepository = new CartRepository();
         orderRepository = new OrderRepository();
         productRepository = new ProductRepository();
-        shippingService = new ShippingService();
+
+        const systemConfigRepository = new SystemConfigRepository();
+        systemConfigService = new SystemConfigService(systemConfigRepository);
+        shippingService = new ShippingService(systemConfigService);
+
         const discountRepository = new DiscountRepository();
         discountService = new DiscountService(discountRepository);
 

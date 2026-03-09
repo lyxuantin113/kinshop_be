@@ -5,9 +5,6 @@ import { AppError } from '../../common/errors/app-error';
 export class DiscountService {
     constructor(private readonly discountRepository: DiscountRepository) { }
 
-    /**
-     * Senior Level: Complex validation for coupons including scope checks
-     */
     async validateDiscount(code: string, subtotal: number, cartItems: any[]): Promise<Discount> {
         const discount = await this.discountRepository.findByCode(code);
 
@@ -32,7 +29,6 @@ export class DiscountService {
             throw new AppError(`Minimum order amount of $${discount.minOrderAmount} required for this coupon`, 400);
         }
 
-        // Scope Validation
         if (discount.scope === DiscountScope.PRODUCT) {
             const hasProduct = cartItems.some(item => item.productId === discount.productId);
             if (!hasProduct) {
@@ -48,9 +44,6 @@ export class DiscountService {
         return discount;
     }
 
-    /**
-     * Calculate final discount amount based on type and scope
-     */
     calculateDiscountAmount(discount: Discount, subtotal: number, cartItems: any[]): number {
         let applicableAmount = 0;
 
@@ -69,8 +62,25 @@ export class DiscountService {
         if (discount.type === DiscountType.PERCENTAGE) {
             return (applicableAmount * Number(discount.value)) / 100;
         } else {
-            // Fixed amount - limited by the applicable product price to avoid negative
             return Math.min(Number(discount.value), applicableAmount);
         }
+    }
+
+    async createDiscount(data: any): Promise<Discount> {
+        return this.discountRepository.create(data);
+    }
+
+    async getAllDiscounts(): Promise<Discount[]> {
+        return this.discountRepository.getAll();
+    }
+
+    async findDiscountById(id: string): Promise<Discount | null> {
+        return this.discountRepository.findById(id);
+    }
+
+    async deleteDiscount(id: string): Promise<void> {
+        const discount = await this.discountRepository.findById(id);
+        if (!discount) throw new AppError('Discount not found', 404);
+        await this.discountRepository.delete(id);
     }
 }

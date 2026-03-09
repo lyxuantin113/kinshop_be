@@ -35,7 +35,7 @@ export class ProductRepository {
     }
 
     /**
-     * Senior Level: Advanced Dynamic Filtering & Search
+     * Advanced Dynamic Filtering & Search
      */
     async findAll(params: ProductFilterParams): Promise<{ data: Product[]; total: number }> {
         const { categoryId, search, minPrice, maxPrice, sortBy, sortOrder, skip, take } = params;

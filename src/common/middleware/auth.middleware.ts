@@ -56,3 +56,5 @@ export const restrictTo = (...roles: string[]) => {
         next();
     };
 };
+
+export const authorize = restrictTo;

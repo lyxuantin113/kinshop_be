@@ -1,15 +1,18 @@
-export class ShippingService {
-    private readonly BASE_SHIPPING_FEE = Number(process.env.SHIPPING_BASE_FEE) || 5.00;
-    private readonly FREE_SHIPPING_THRESHOLD = Number(process.env.SHIPPING_FREE_THRESHOLD) || 100.00;
+import { SystemConfigService, ConfigKey } from '../system-config/system-config.service';
 
-    /**
-     * Senior Level: Business logic for shipping calculation
-     * Now reading from environment variables for easy configuration
-     */
-    calculateShippingFee(subtotal: number): number {
-        if (subtotal >= this.FREE_SHIPPING_THRESHOLD) {
+export class ShippingService {
+    constructor(private readonly systemConfigService: SystemConfigService) { }
+
+    async calculateShippingFee(subtotal: number): Promise<number> {
+        const freeThresholdStr = await this.systemConfigService.getConfig(ConfigKey.SHIPPING_FREE_THRESHOLD);
+        const baseFeeStr = await this.systemConfigService.getConfig(ConfigKey.SHIPPING_BASE_FEE);
+
+        const freeThreshold = Number(freeThresholdStr);
+        const baseFee = Number(baseFeeStr);
+
+        if (subtotal >= freeThreshold) {
             return 0;
         }
-        return this.BASE_SHIPPING_FEE;
+        return baseFee;
     }
 }

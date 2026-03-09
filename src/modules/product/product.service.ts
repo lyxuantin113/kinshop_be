@@ -23,7 +23,7 @@ export class ProductService {
     }
 
     /**
-     * Senior Level: Optimized pagination + dynamic filtering logic
+     * Optimized pagination + dynamic filtering logic
      */
     async getAllProducts(query: ProductQuery): Promise<PaginatedResponse<Product>> {
         const { page, limit, ...filters } = query;
