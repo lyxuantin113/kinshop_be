@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { OrderRepository } from './order.repository';
+import { ShippingService } from './shipping.service';
 import { CartRepository } from '../cart/cart.repository';
 import { ProductRepository } from '../product/product.repository';
 import { protect } from '../../common/middleware/auth.middleware';
@@ -11,7 +12,8 @@ const router = Router();
 const orderRepository = new OrderRepository();
 const cartRepository = new CartRepository();
 const productRepository = new ProductRepository();
-const orderService = new OrderService(orderRepository, cartRepository, productRepository);
+const shippingService = new ShippingService();
+const orderService = new OrderService(orderRepository, cartRepository, productRepository, shippingService);
 const orderController = new OrderController(orderService);
 
 router.use(protect);

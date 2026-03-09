@@ -102,6 +102,8 @@ model Order {
   userId      String
   user        User        @relation(fields: [userId], references: [id])
   items       OrderItem[]
+  subtotal    Decimal     @db.Decimal(10, 2)
+  shippingFee Decimal     @db.Decimal(10, 2)
   totalAmount Decimal     @db.Decimal(10, 2)
   status      OrderStatus @default(PENDING)
   createdAt   DateTime    @default(now())

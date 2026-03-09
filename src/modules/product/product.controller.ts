@@ -3,9 +3,13 @@ import { ProductService } from './product.service';
 import { CreateProductSchema, ProductQuerySchema } from './product.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
+import { StorageService } from '../../common/services/storage.service';
 
 export class ProductController {
-    constructor(private readonly productService: ProductService) { }
+    constructor(
+        private readonly productService: ProductService,
+        private readonly storageService: StorageService
+    ) { }
 
     create = asyncHandler(async (req: Request, res: Response) => {
         const validatedData = CreateProductSchema.parse(req.body);
@@ -14,16 +18,30 @@ export class ProductController {
     });
 
     /**
-     * Senior Level: Clean Controller with advanced query validation
+     * Handle multi-image upload to GCS
      */
+    uploadImages = asyncHandler(async (req: Request, res: Response) => {
+        const files = req.files as Express.Multer.File[];
+        if (!files || files.length === 0) {
+            throw new AppError('No images provided', 400);
+        }
+
+        // Upload all files in parallel
+        const uploadPromises = files.map(file =>
+            this.storageService.uploadFile(file, 'products')
+        );
+
+        const imageUrls = await Promise.all(uploadPromises);
+
+        res.status(200).json({
+            status: 'success',
+            data: imageUrls
+        });
+    });
+
     getAll = asyncHandler(async (req: Request, res: Response) => {
-        // 1. Validate full query complex object (page, limit, search, price range, etc.)
         const query = ProductQuerySchema.parse(req.query);
-
-        // 2. Call service with typed query
         const result = await this.productService.getAllProducts(query);
-
-        // 3. Standardized Response
         res.status(200).json(result);
     });
 
