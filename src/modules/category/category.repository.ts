@@ -7,21 +7,24 @@ export class CategoryRepository {
     }
 
     async findById(id: string): Promise<Category | null> {
-        return prisma.category.findUnique({ where: { id } });
+        return prisma.category.findFirst({ where: { id, deletedAt: null } });
     }
 
     async findBySlug(slug: string): Promise<Category | null> {
-        return prisma.category.findUnique({ where: { slug } });
+        return prisma.category.findFirst({ where: { slug, deletedAt: null } });
     }
 
     async findAll(params: { skip: number; take: number }): Promise<{ data: Category[]; total: number }> {
+        const where: Prisma.CategoryWhereInput = { deletedAt: null };
+
         const [data, total] = await prisma.$transaction([
             prisma.category.findMany({
+                where,
                 orderBy: { name: 'asc' },
                 skip: params.skip,
                 take: params.take,
             }),
-            prisma.category.count()
+            prisma.category.count({ where })
         ]);
 
         return { data, total };
@@ -35,6 +38,9 @@ export class CategoryRepository {
     }
 
     async delete(id: string): Promise<Category> {
-        return prisma.category.delete({ where: { id } });
+        return prisma.category.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
     }
 }

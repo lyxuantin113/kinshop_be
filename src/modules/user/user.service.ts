@@ -141,4 +141,12 @@ export class UserService {
             meta: getPaginationMeta(total, page, limit)
         };
     }
+
+    async deleteUser(id: string): Promise<void> {
+        const user = await this.userRepository.findById(id);
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+        await this.userRepository.softDelete(id);
+    }
 }

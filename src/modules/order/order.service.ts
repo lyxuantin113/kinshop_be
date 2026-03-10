@@ -16,7 +16,7 @@ export class OrderService {
         private readonly discountService: DiscountService
     ) { }
 
-    async checkout(userId: string, couponCode?: string): Promise<Order> {
+    async checkout(userId: string, shippingInfo: { address: string; phoneNumber: string }, couponCode?: string): Promise<Order> {
         const cart = await this.cartRepository.getByUserId(userId);
         if (!cart || cart.items.length === 0) {
             throw new AppError('Cart is empty', 400);
@@ -60,6 +60,8 @@ export class OrderService {
                     discountAmount,
                     discountId,
                     totalAmount,
+                    address: shippingInfo.address,
+                    phoneNumber: shippingInfo.phoneNumber,
                     status: OrderStatus.PENDING,
                     items: {
                         create: orderItemsData
@@ -136,6 +138,12 @@ export class OrderService {
 
     async getAllOrders(params: { page: number; limit: number; status?: OrderStatus; userId?: string }) {
         return this.orderRepository.findAll(params);
+    }
+
+    async getAdminOrderDetails(orderId: string): Promise<Order> {
+        const order = await this.orderRepository.findById(orderId);
+        if (!order) throw new AppError('Order not found', 404);
+        return order;
     }
 
     async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {

@@ -13,6 +13,7 @@ const controller = new DiscountController(service);
 router.use(protect, authorize('ADMIN'));
 
 router.post('/', controller.createDiscount);
+router.patch('/:id', controller.updateDiscount);
 router.get('/', controller.getAllDiscounts);
 router.delete('/:id', controller.deleteDiscount);
 

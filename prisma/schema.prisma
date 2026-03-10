@@ -9,15 +9,16 @@ datasource db {
 
 // Example User Model
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String    @id @default(uuid())
+  email     String    @unique
   password  String
   name      String?
-  role      Role     @default(USER)
+  role      Role      @default(USER)
   cart      Cart?
   orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@map("users")
 }
@@ -36,6 +37,7 @@ model Category {
   discounts   Discount[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@map("categories")
 }
@@ -56,6 +58,7 @@ model Product {
   version     Int            @default(0)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
 
   @@map("products")
 }
@@ -111,6 +114,8 @@ model Order {
   discountId  String?
   discount    Discount?   @relation(fields: [discountId], references: [id])
   totalAmount Decimal     @db.Decimal(10, 2)
+  address     String?
+  phoneNumber String?
   status      OrderStatus @default(PENDING)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -140,6 +145,7 @@ model Discount {
   orders         Order[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
 
   @@map("discounts")
 }

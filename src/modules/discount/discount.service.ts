@@ -1,4 +1,6 @@
 import { Discount, DiscountType, DiscountScope, CartItem } from '@prisma/client';
+import { CreateDiscountDto } from './discount.dto';
+import { PaginatedResponse, getPaginationMeta } from '../../common/utils/pagination';
 import { DiscountRepository } from './discount.repository';
 import { AppError } from '../../common/errors/app-error';
 
@@ -66,7 +68,7 @@ export class DiscountService {
         }
     }
 
-    async createDiscount(data: any): Promise<Discount> {
+    async createDiscount(data: CreateDiscountDto): Promise<Discount> {
         return this.discountRepository.create(data);
     }
 
@@ -78,9 +80,25 @@ export class DiscountService {
         return this.discountRepository.findById(id);
     }
 
+    async updateDiscount(id: string, data: Partial<CreateDiscountDto>): Promise<Discount> {
+        const discount = await this.discountRepository.findById(id);
+        if (!discount) {
+            throw new Error('Discount not found');
+        }
+
+        if (data.code && data.code.toUpperCase() !== discount.code) {
+            const existing = await this.discountRepository.findByCode(data.code);
+            if (existing) {
+                throw new Error('Discount with this code already exists');
+            }
+        }
+
+        return this.discountRepository.update(id, data);
+    }
+
     async deleteDiscount(id: string): Promise<void> {
         const discount = await this.discountRepository.findById(id);
         if (!discount) throw new AppError('Discount not found', 404);
-        await this.discountRepository.delete(id);
+        await this.discountRepository.softDelete(id);
     }
 }

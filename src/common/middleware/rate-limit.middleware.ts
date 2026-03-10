@@ -21,7 +21,7 @@ export const standardRateLimiter = rateLimit({
  * Best for Login, Register, Refresh Token
  */
 export const authRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     max: 10,
     skip: () => process.env.NODE_ENV === 'test',
     handler: (req, res, next, options) => {

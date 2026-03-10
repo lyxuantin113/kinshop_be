@@ -38,7 +38,8 @@ describe('UserService', () => {
                 name: 'Test User',
                 role: Role.USER,
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                deletedAt: null
             };
 
             userRepositoryMock.findByEmail.mockResolvedValue(null);
@@ -85,7 +86,8 @@ describe('UserService', () => {
                 name: 'Test User',
                 role: Role.USER,
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                deletedAt: null
             };
 
             userRepositoryMock.findByEmail.mockResolvedValue(userInDb);
@@ -133,7 +135,7 @@ describe('UserService', () => {
     describe('getAllUsers', () => {
         it('should return paginated user list', async () => {
             const users: User[] = [
-                { id: '1', email: 'u1@e.com', password: 'h1', name: 'U1', role: Role.USER, createdAt: new Date(), updatedAt: new Date() }
+                { id: '1', email: 'u1@e.com', password: 'h1', name: 'U1', role: Role.USER, createdAt: new Date(), updatedAt: new Date(), deletedAt: null }
             ];
 
             userRepositoryMock.findAll.mockResolvedValue({ data: users, total: 1 });

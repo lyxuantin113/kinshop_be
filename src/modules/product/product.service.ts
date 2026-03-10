@@ -2,9 +2,13 @@ import { Product, ProductImage } from '@prisma/client';
 import { ProductRepository, CreateProductInputWithImages } from './product.repository';
 import { CreateProductInput, ProductQuery } from './product.dto';
 import { PaginatedResponse, getPaginationMeta } from '../../common/utils/pagination';
+import { StorageService } from '../../common/services/storage.service';
 
 export class ProductService {
-    constructor(private readonly productRepository: ProductRepository) { }
+    constructor(
+        private readonly productRepository: ProductRepository,
+        private readonly storageService: StorageService
+    ) { }
 
     async createProduct(data: CreateProductInput): Promise<Product & { images: ProductImage[] }> {
         const existing = await this.productRepository.findBySlug(data.slug);
@@ -13,10 +17,17 @@ export class ProductService {
         }
 
         const { images, ...productData } = data;
+
+        // Clean URLs before saving to DB
+        const cleanedImages = images?.map(img => ({
+            ...img,
+            url: this.storageService.getCleanUrl(img.url)
+        }));
+
         const repositoryInput: CreateProductInputWithImages = {
             ...productData,
             price: data.price as any,
-            images: images as any
+            images: cleanedImages as any
         };
 
         return this.productRepository.create(repositoryInput);
@@ -48,6 +59,34 @@ export class ProductService {
             return this.productRepository.findById(idOrSlug);
         }
         return this.productRepository.findBySlug(idOrSlug);
+    }
+
+    async updateProduct(id: string, data: Partial<CreateProductInput>): Promise<Product & { images: ProductImage[] }> {
+        const product = await this.productRepository.findById(id);
+        if (!product) {
+            throw new Error('Product not found');
+        }
+
+        if (data.slug && data.slug !== product.slug) {
+            const existing = await this.productRepository.findBySlug(data.slug);
+            if (existing) {
+                throw new Error('Product with this slug already exists');
+            }
+        }
+
+        const { images, ...productData } = data;
+
+        // Clean URLs before saving to DB
+        const cleanedImages = images?.map(img => ({
+            ...img,
+            url: this.storageService.getCleanUrl(img.url)
+        }));
+
+        return this.productRepository.update(id, {
+            ...productData,
+            price: productData.price as any,
+            images: cleanedImages as any
+        });
     }
 
     async deleteProduct(id: string): Promise<Product> {

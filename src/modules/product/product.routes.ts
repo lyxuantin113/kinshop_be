@@ -8,9 +8,9 @@ import { protect, restrictTo } from '../../common/middleware/auth.middleware';
 
 const router = Router();
 
-const productRepository = new ProductRepository();
-const productService = new ProductService(productRepository);
 const storageService = new StorageService();
+const productRepository = new ProductRepository();
+const productService = new ProductService(productRepository, storageService);
 const productController = new ProductController(productService, storageService);
 
 router.get('/', productController.getAll);
@@ -21,6 +21,7 @@ router.use(protect, restrictTo('ADMIN'));
 
 router.post('/', productController.create);
 router.post('/upload-images', upload.array('images', 5), productController.uploadImages);
+router.patch('/:id', productController.update);
 router.delete('/:id', productController.delete);
 
 export default router;

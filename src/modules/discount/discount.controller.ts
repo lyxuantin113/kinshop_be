@@ -23,6 +23,16 @@ export class DiscountController {
         });
     });
 
+    updateDiscount = asyncHandler(async (req: Request, res: Response) => {
+        const id = req.params.id as string;
+        const data = req.body;
+        const discount = await this.discountService.updateDiscount(id, data);
+        res.status(200).json({
+            status: 'success',
+            data: discount
+        });
+    });
+
     deleteDiscount = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         await this.discountService.deleteDiscount(id);

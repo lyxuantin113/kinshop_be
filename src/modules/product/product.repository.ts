@@ -42,6 +42,7 @@ export class ProductRepository {
 
         // 1. Build Dynamic Where Clause
         const where: Prisma.ProductWhereInput = {
+            deletedAt: null,
             // Category filter
             ...(categoryId && { categoryId }),
 
@@ -89,8 +90,8 @@ export class ProductRepository {
     }
 
     async findById(id: string): Promise<(Product & { images: ProductImage[] }) | null> {
-        return prisma.product.findUnique({
-            where: { id },
+        return prisma.product.findFirst({
+            where: { id, deletedAt: null },
             include: {
                 images: true,
                 category: true
@@ -99,8 +100,28 @@ export class ProductRepository {
     }
 
     async findBySlug(slug: string): Promise<(Product & { images: ProductImage[] }) | null> {
-        return prisma.product.findUnique({
-            where: { slug },
+        return prisma.product.findFirst({
+            where: { slug, deletedAt: null },
+            include: {
+                images: true,
+                category: true
+            }
+        }) as any;
+    }
+
+    async update(id: string, data: Partial<CreateProductInputWithImages>): Promise<Product & { images: ProductImage[] }> {
+        const { images, ...productData } = data;
+
+        return prisma.product.update({
+            where: { id },
+            data: {
+                ...productData,
+                price: productData.price as any,
+                images: images ? {
+                    deleteMany: {},
+                    create: images
+                } : undefined
+            },
             include: {
                 images: true,
                 category: true
@@ -109,8 +130,9 @@ export class ProductRepository {
     }
 
     async delete(id: string): Promise<Product> {
-        return prisma.product.delete({
-            where: { id }
+        return prisma.product.update({
+            where: { id },
+            data: { deletedAt: new Date() }
         });
     }
 }

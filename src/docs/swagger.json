@@ -231,6 +231,14 @@
                     "totalAmount": {
                         "type": "number"
                     },
+                    "address": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "phoneNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "items": {
                         "type": "array",
                         "items": {
@@ -909,10 +917,21 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
+                                "required": [
+                                    "address",
+                                    "phoneNumber"
+                                ],
                                 "properties": {
                                     "couponCode": {
                                         "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main St, Springfield"
+                                    },
+                                    "phoneNumber": {
+                                        "type": "string",
+                                        "example": "0901234567"
                                     }
                                 }
                             }

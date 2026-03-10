@@ -80,17 +80,21 @@ export class OrderRepository {
     }
 
     async getStats() {
-        const [totalRevenue, totalOrders] = await Promise.all([
+        const [totalRevenue, totalOrders, totalUsers, totalProducts] = await Promise.all([
             prisma.order.aggregate({
                 where: { status: { not: OrderStatus.CANCELLED } },
                 _sum: { totalAmount: true }
             }),
-            prisma.order.count()
+            prisma.order.count(),
+            prisma.user.count(),
+            prisma.product.count()
         ]);
 
         return {
             revenue: totalRevenue._sum.totalAmount || 0,
-            orders: totalOrders
+            orders: totalOrders,
+            users: totalUsers,
+            products: totalProducts
         };
     }
 }

@@ -11,8 +11,12 @@ export class OrderController {
         const userId = req.user?.id;
         if (!userId) throw new AppError('Unauthorized', 401);
 
-        const { couponCode } = req.body || {};
-        const order = await this.orderService.checkout(userId, couponCode);
+        const { couponCode, address, phoneNumber } = req.body || {};
+        if (!address || !phoneNumber) {
+            throw new AppError('Shipping address and phone number are required', 400);
+        }
+
+        const order = await this.orderService.checkout(userId, { address, phoneNumber }, couponCode);
 
         res.status(201).json({
             status: 'success',
@@ -67,6 +71,16 @@ export class OrderController {
         if (!status) throw new AppError('Status is required', 400);
 
         const order = await this.orderService.updateStatus(orderId, status as OrderStatus);
+
+        res.status(200).json({
+            status: 'success',
+            data: order
+        });
+    });
+
+    getAdminOrder = asyncHandler(async (req: Request, res: Response) => {
+        const orderId = req.params.orderId as string;
+        const order = await this.orderService.getAdminOrderDetails(orderId);
 
         res.status(200).json({
             status: 'success',
