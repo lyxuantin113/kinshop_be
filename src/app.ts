@@ -18,6 +18,7 @@ import swaggerDocument from './docs/swagger.json';
 const app: Express = express();
 
 // Security Middlewares
+app.set('trust proxy', 1);
 app.use(helmet());
 
 // Strict CORS Policy

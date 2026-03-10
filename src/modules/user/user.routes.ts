@@ -14,7 +14,7 @@ const userController = new UserController(userService);
 
 router.post('/register', authRateLimiter, userController.register);
 router.post('/login', authRateLimiter, userController.login);
-router.post('/logout', protect, userController.logout);
+router.post('/logout', userController.logout);
 router.post('/refresh', authRateLimiter, userController.refresh);
 router.get('/', protect, restrictTo('ADMIN'), userController.getAll);
 

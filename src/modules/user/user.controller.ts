@@ -22,13 +22,14 @@ export class UserController {
         const validatedData = LoginSchema.parse(req.body);
         const { user, accessToken, refreshToken } = await this.userService.login(validatedData);
 
-        // Set refresh token in HTTP-only cookie
-        res.cookie('refreshToken', refreshToken, {
+        const cookieOptions: any = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // true in production
-            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        };
+
+        res.cookie('refreshToken', refreshToken, cookieOptions);
 
         res.status(200).json({
             status: 'success',
@@ -47,13 +48,15 @@ export class UserController {
             await this.userService.logout(userId, accessToken);
         }
 
-        res.clearCookie('refreshToken');
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' as any
+        });
         res.status(200).json({ status: 'success', message: 'Logged out successfully' });
     });
 
     refresh = asyncHandler(async (req: Request, res: Response) => {
-
-        // PENDING: TỐI ƯU LOGIC VÀO SERVICE
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {
             throw new AppError('Refresh token missing', 401);
@@ -61,13 +64,14 @@ export class UserController {
 
         const tokens = await this.userService.refreshToken(refreshToken);
 
-        // Set new refresh token in cookie (Rotation)
-        res.cookie('refreshToken', tokens.refreshToken, {
+        const cookieOptions: any = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+        };
+
+        res.cookie('refreshToken', tokens.refreshToken, cookieOptions);
 
         res.status(200).json({
             status: 'success',
