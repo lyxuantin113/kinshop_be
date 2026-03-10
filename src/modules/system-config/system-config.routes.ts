@@ -9,9 +9,10 @@ const repository = new SystemConfigRepository();
 const service = new SystemConfigService(repository);
 const controller = new SystemConfigController(service);
 
+router.get('/', controller.getAllConfigs);
+
 router.use(protect, authorize('ADMIN'));
 
-router.get('/', controller.getAllConfigs);
 router.patch('/:key', controller.updateConfig);
 
 export default router;

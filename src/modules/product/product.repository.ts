@@ -62,9 +62,9 @@ export class ProductRepository {
             }),
         };
 
-        // 2. Execute parallel query
-        const [data, total] = await prisma.$transaction([
-            prisma.product.findMany({
+        // 2. Execute parallel query using functional transaction for better timeout support
+        const [data, total] = await prisma.$transaction(async (tx) => {
+            const data = await tx.product.findMany({
                 where,
                 include: {
                     images: {
@@ -76,9 +76,14 @@ export class ProductRepository {
                 skip,
                 take,
                 orderBy: { [sortBy || 'createdAt']: sortOrder || 'desc' }
-            }),
-            prisma.product.count({ where })
-        ]);
+            });
+
+            const total = await tx.product.count({ where });
+
+            return [data, total];
+        }, {
+            timeout: 20000 // Tăng timeout lên 20s cho kết nối từ xa
+        });
 
         return { data, total };
     }

@@ -1,3 +1,7 @@
+import 'dotenv/config';
+console.log('[Main] dotenv/config loaded');
+console.log('[Main] DATABASE_URL present:', !!process.env.DATABASE_URL);
+
 import app from './app';
 import pino from 'pino';
 

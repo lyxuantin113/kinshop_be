@@ -9,6 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DATABASE_URL"] || "postgresql://postgres:0912644361Tin@34.142.217.93:5432/kinshop?schema=public",
   },
 });

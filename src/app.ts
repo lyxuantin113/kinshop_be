@@ -2,7 +2,6 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 
 import userRoutes from './modules/user/user.routes';
 import categoryRoutes from './modules/category/category.routes';
@@ -15,8 +14,6 @@ import { errorMiddleware } from './common/middleware/error.middleware';
 import { standardRateLimiter } from './common/middleware/rate-limit.middleware';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './docs/swagger.json';
-
-dotenv.config();
 
 const app: Express = express();
 
