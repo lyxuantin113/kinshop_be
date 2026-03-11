@@ -5,8 +5,8 @@ import { AppError } from '../errors/app-error';
  * Standard Rate Limiter - 100 requests per 15 minutes
  */
 export const standardRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+    windowMs: 5 * 60 * 1000,
+    max: 500,
     skip: () => process.env.NODE_ENV === 'test',
     message: {
         status: 'fail',
@@ -21,8 +21,8 @@ export const standardRateLimiter = rateLimit({
  * Best for Login, Register, Refresh Token
  */
 export const authRateLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 10,
+    windowMs: 5 * 60 * 1000,
+    max: 20,
     skip: () => process.env.NODE_ENV === 'test',
     handler: (req, res, next, options) => {
         throw new AppError(options.message.message, 429);

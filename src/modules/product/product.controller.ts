@@ -4,22 +4,16 @@ import { CreateProductSchema, ProductQuerySchema } from './product.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
 import { StorageService } from '../../common/services/storage.service';
-import { ProductTransformer } from './product.transformer';
 
 export class ProductController {
-    private readonly productTransformer: ProductTransformer;
-
     constructor(
         private readonly productService: ProductService,
         private readonly storageService: StorageService
-    ) {
-        this.productTransformer = new ProductTransformer(this.storageService);
-    }
+    ) { }
 
     create = asyncHandler(async (req: Request, res: Response) => {
         const validatedData = CreateProductSchema.parse(req.body);
-        let product = await this.productService.createProduct(validatedData);
-        product = await this.productTransformer.transform(product);
+        const product = await this.productService.createProduct(validatedData);
         res.status(201).json({ data: product });
     });
 
@@ -39,40 +33,31 @@ export class ProductController {
 
         const imageUrls = await Promise.all(uploadPromises);
 
-        // Sign uploaded URLs immediately for the response so FE can preview
-        const signedUrls = await Promise.all(
-            imageUrls.map(url => this.storageService.getSignedUrl(url))
-        );
-
         res.status(200).json({
             status: 'success',
-            data: signedUrls,
-            rawUrls: imageUrls // Send raw URLs too so FE can use them for saving
+            data: imageUrls
         });
     });
 
     getAll = asyncHandler(async (req: Request, res: Response) => {
         const query = ProductQuerySchema.parse(req.query);
         const result = await this.productService.getAllProducts(query);
-        const transformedResult = await this.productTransformer.transformMany(result);
-        res.status(200).json(transformedResult);
+        res.status(200).json(result);
     });
 
     getOne = asyncHandler(async (req: Request, res: Response) => {
         const idOrSlug = req.params.idOrSlug as string;
-        let product = await this.productService.getProductDetails(idOrSlug);
+        const product = await this.productService.getProductDetails(idOrSlug);
         if (!product) {
             throw new AppError('Product not found', 404);
         }
-        product = await this.productTransformer.transform(product);
         res.status(200).json({ data: product });
     });
 
     update = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const validatedData = CreateProductSchema.partial().parse(req.body);
-        let product = await this.productService.updateProduct(id, validatedData);
-        product = await this.productTransformer.transform(product);
+        const product = await this.productService.updateProduct(id, validatedData);
         res.status(200).json({ data: product });
     });
 

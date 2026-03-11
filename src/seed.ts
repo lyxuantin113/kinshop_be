@@ -2,27 +2,43 @@ import 'dotenv/config';
 import { Role, DiscountType, DiscountScope } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
-import prisma from '../src/config/database';
+import prisma from './config/database';
 
 const BUCKET_URL = `https://storage.googleapis.com/${process.env.GCP_BUCKET_NAME}`;
 
-// Danh sách ảnh mẫu thực tế để map (giả định các file này tồn tại trên bucket)
-const SAMPLE_IMAGES = [
-    'products/electronics-1.jpg',
-    'products/electronics-2.jpg',
-    'products/clothing-1.jpg',
-    'products/clothing-2.jpg',
-    'products/home-1.jpg',
-    'products/home-2.jpg',
-];
+// Map Categories to Unsplash keywords for better seed images
+const CATEGORY_IMAGE_KEYWORDS: Record<string, string> = {
+    'Electronics': 'electronics,tech',
+    'Clothing': 'fashion,clothing',
+    'Home & Kitchen': 'kitchen,interior',
+    'Books': 'books,library',
+    'Beauty': 'cosmetics,beauty',
+};
+
+function getPlaceholderImage(categoryName: string): string {
+    const keyword = CATEGORY_IMAGE_KEYWORDS[categoryName] || 'product';
+    return `https://images.unsplash.com/photo-${faker.string.nanoid(10)}?q=80&w=800&auto=format&fit=crop&sig=${faker.string.nanoid(5)}&keywords=${keyword}`;
+}
 
 async function main() {
     console.log('🌱 Starting seed process...');
 
     // 0. Cleanup existing data to avoid duplication and fix image URLs
-    console.log('🧹 Cleaning up old products and images...');
+    console.log('🧹 Cleaning up database...');
+    
+    // Dependent tables first (Children)
+    await prisma.orderItem.deleteMany();
+    await prisma.cartItem.deleteMany();
     await prisma.productImage.deleteMany();
+    
+    // Parent tables
+    await prisma.order.deleteMany();
+    await prisma.cart.deleteMany();
+    await prisma.discount.deleteMany();
     await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.user.deleteMany();
+    
     console.log('✅ Cleanup done.');
 
     // 1. System Configs
@@ -107,12 +123,12 @@ async function main() {
                     images: {
                         create: [
                             {
-                                url: `${BUCKET_URL}/${faker.helpers.arrayElement(SAMPLE_IMAGES)}`,
+                                url: getPlaceholderImage(category.name),
                                 isPrimary: true,
                                 altText: productName,
                             },
                             {
-                                url: `${BUCKET_URL}/${faker.helpers.arrayElement(SAMPLE_IMAGES)}`,
+                                url: getPlaceholderImage(category.name),
                                 isPrimary: false,
                                 altText: `${productName} secondary`,
                             }

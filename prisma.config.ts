@@ -7,7 +7,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: 'ts-node ./prisma/seed.ts',
+    seed: 'ts-node src/seed.ts',
   },
   datasource: {
     url: process.env["DATABASE_URL"] || "postgresql://postgres:0912644361Tin@34.142.217.93:5432/kinshop?schema=public",

@@ -74,46 +74,11 @@ export class StorageService {
     }
 
     /**
-     * Returns a standard public URL (clean) for database storage
+     * Returns a standard public URL for database storage and display
      */
     getCleanUrl(pathOrUrl: string): string {
         const path = this.getCleanPath(pathOrUrl);
         if (!path) return pathOrUrl;
         return `https://storage.googleapis.com/${bucketName}/${path}`;
-    }
-
-    /**
-     * Generate a signed URL for a file
-     * Supports both full URLs and paths
-     */
-    async getSignedUrl(pathOrUrl: string): Promise<string> {
-        try {
-            const fileName = this.getCleanPath(pathOrUrl);
-
-            if (!fileName) return pathOrUrl;
-
-            const file = bucket.file(fileName);
-
-            // Log attempt for debugging
-            console.log(`[StorageService] Signing URL for: ${fileName}`);
-
-            const [url] = await file.getSignedUrl({
-                version: 'v4',
-                action: 'read',
-                expires: Date.now() + 60 * 60 * 1000, // 1 hour
-            });
-
-            return url;
-        } catch (error: any) {
-            // CRITICAL: Log the actual error to Cloud Run logs
-            console.error(`[StorageService] GCS Sign Error for ${pathOrUrl}: ${error.message}`);
-
-            // If the error is about missing credentials, we need to know!
-            if (error.message.includes('credentials') || error.message.includes('key')) {
-                console.error(`[StorageService] Hint: Ensure GCP_CLIENT_EMAIL and GCP_PRIVATE_KEY are set or Service Account has IAM signBlob permission.`);
-            }
-
-            return this.getCleanUrl(pathOrUrl); // Fallback to clean public URL
-        }
     }
 }
