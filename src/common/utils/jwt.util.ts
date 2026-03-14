@@ -1,10 +1,8 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import { configs } from '../../config/index';
 
-dotenv.config();
-
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'access_secret_123';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'refresh_secret_123';
+const ACCESS_TOKEN_SECRET = configs.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = configs.REFRESH_TOKEN_SECRET;
 
 export const ACCESS_TOKEN_EXPIRES_IN = '15m'; // 15 minutes
 export const REFRESH_TOKEN_EXPIRES_IN = '7d'; // 7 days

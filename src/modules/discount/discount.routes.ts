@@ -1,13 +1,9 @@
 import { Router } from 'express';
-import { DiscountController } from './discount.controller';
-import { DiscountService } from './discount.service';
-import { DiscountRepository } from './discount.repository';
 import { protect, authorize } from '../../common/middleware/auth.middleware';
+import { container } from '../../common/container';
 
 const router = Router();
-const repository = new DiscountRepository();
-const service = new DiscountService(repository);
-const controller = new DiscountController(service);
+const controller = container.discountController;
 
 // Admin only routes for management
 router.use(protect, authorize('ADMIN'));

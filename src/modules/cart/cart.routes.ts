@@ -1,14 +1,9 @@
 import { Router } from 'express';
-import { CartController } from './cart.controller';
-import { CartService } from './cart.service';
-import { CartRepository } from './cart.repository';
 import { protect } from '../../common/middleware/auth.middleware';
+import { container } from '../../common/container';
 
 const router = Router();
-
-const cartRepository = new CartRepository();
-const cartService = new CartService(cartRepository);
-const cartController = new CartController(cartService);
+const cartController = container.cartController;
 
 // All cart routes are protected
 router.use(protect);

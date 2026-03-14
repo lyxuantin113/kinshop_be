@@ -1,19 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { configs } from './index';
 
-if (!process.env.DATABASE_URL) {
-    console.warn('[DatabaseConfig] DATABASE_URL is not defined in environment variables!');
-} else {
-    // Log only the host and database part for security
-    const sanitizedUrl = process.env.DATABASE_URL.includes('@')
-        ? process.env.DATABASE_URL.split('@')[1]
-        : process.env.DATABASE_URL;
-    console.log('[DatabaseConfig] Initializing database pool with URL part:', sanitizedUrl);
-}
+// Log only the host and database part for security
+const sanitizedUrl = configs.DATABASE_URL.includes('@')
+    ? configs.DATABASE_URL.split('@')[1]
+    : configs.DATABASE_URL;
+console.log('[DatabaseConfig] Initializing database pool with URL part:', sanitizedUrl);
 
 export const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: configs.DATABASE_URL,
     max: 10, // Giới hạn số lượng connection
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000, // Tăng timeout chờ kết nối
@@ -30,7 +27,7 @@ pool.on('connect', () => {
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
+    log: configs.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
 });
 
 export default prisma;

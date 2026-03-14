@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../errors/app-error';
+import logger from '../utils/logger';
 
 /**
  * Global Error Handler
@@ -41,7 +42,11 @@ export const errorMiddleware = (
     }
 
     // Log unexpected errors for developers
-    console.error('ERROR: ', err);
+    if (statusCode === 500) {
+        logger.error({ err }, 'Unexpected Error');
+    } else {
+        logger.warn({ err }, `Request Error: ${message}`);
+    }
 
     res.status(statusCode).json({
         status: 'error',

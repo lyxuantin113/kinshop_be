@@ -6,6 +6,7 @@ import { DiscountService } from '../discount/discount.service';
 import prisma from '../../config/database';
 import { AppError } from '../../common/errors/app-error';
 import { Order, OrderStatus } from '@prisma/client';
+import eventEmitter from '../../common/events/event-emitter';
 
 export class OrderService {
     constructor(
@@ -132,6 +133,9 @@ export class OrderService {
                 where: { cartId: cart.id }
             });
 
+            // Gửi sự kiện sau khi transaction thành công
+            eventEmitter.emit('order.created', order);
+
             return order;
         });
     }
@@ -173,7 +177,12 @@ export class OrderService {
             throw new AppError('Cannot cancel a delivered order', 400);
         }
 
-        return this.orderRepository.updateStatus(orderId, status);
+        const updatedOrder = await this.orderRepository.updateStatus(orderId, status);
+
+        // Gửi sự kiện cập nhật trạng thái
+        eventEmitter.emit('order.status_updated', { orderId, status });
+
+        return updatedOrder;
     }
 
     async getDashboardStats() {

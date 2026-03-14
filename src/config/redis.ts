@@ -1,16 +1,13 @@
 import Redis from 'ioredis';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { configs } from './index';
 
 const redisContext = {
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
+    host: configs.REDIS_HOST,
+    port: configs.REDIS_PORT,
     // Prevent hanging in tests if Redis is down
-    maxRetriesPerRequest: process.env.NODE_ENV === 'test' ? 1 : 20,
+    maxRetriesPerRequest: configs.NODE_ENV === 'test' ? 1 : 20,
     retryStrategy: (times: number) => {
-        if (process.env.NODE_ENV === 'test') return null; // stop retrying
+        if (configs.NODE_ENV === 'test') return null; // stop retrying
         return Math.min(times * 50, 2000);
     },
     lazyConnect: true
