@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { DiscountService } from './discount.service';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
+import { CreateDiscountSchema } from './discount.dto';
 
 export class DiscountController {
     constructor(private readonly discountService: DiscountService) { }
 
     createDiscount = asyncHandler(async (req: Request, res: Response) => {
-        const data = req.body;
+        const data = CreateDiscountSchema.parse(req.body);
         const discount = await this.discountService.createDiscount(data);
         res.status(201).json({
             status: 'success',
@@ -25,7 +26,7 @@ export class DiscountController {
 
     updateDiscount = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
-        const data = req.body;
+        const data = CreateDiscountSchema.partial().parse(req.body);
         const discount = await this.discountService.updateDiscount(id, data);
         res.status(200).json({
             status: 'success',

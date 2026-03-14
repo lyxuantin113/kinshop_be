@@ -31,7 +31,8 @@ export class CategoryController {
 
     update = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
-        const category = await this.categoryService.updateCategory(id, req.body);
+        const validatedData = CategorySchema.partial().parse(req.body);
+        const category = await this.categoryService.updateCategory(id, validatedData);
         res.status(200).json({ data: category });
     });
 

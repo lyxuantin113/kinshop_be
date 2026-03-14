@@ -12,6 +12,7 @@ export const errorMiddleware = (
     res: Response,
     next: NextFunction
 ) => {
+    const { method, url, user } = req;
     let statusCode = err.statusCode || 500;
     let message = err.message || 'Internal Server Error';
 
@@ -27,29 +28,44 @@ export const errorMiddleware = (
         });
     }
 
-    // 2. Handle Prisma Specific Errors (e.g., Unique constraint)
+    // 2. Handle Prisma Specific Errors
     if (err.code === 'P2002') {
         statusCode = 409;
-        message = 'Duplicate field value entered';
+        message = `Unique constraint failed on field(s): ${(err.meta?.target as string[])?.join(', ') || 'unknown'}`;
+    } else if (err.code === 'P2025') {
+        statusCode = 404;
+        message = 'Record not found';
+    } else if (err.code === 'P2003') {
+        statusCode = 409;
+        message = 'Foreign key constraint failed. This record is referenced by other data.';
     }
 
-    // 3. Operational Errors (AppError) vs Unexpected Errors
+    // 3. Operational Errors (AppError)
     if (err instanceof AppError) {
-        return res.status(err.statusCode).json({
-            status: 'error',
-            message: err.message
-        });
+        statusCode = err.statusCode;
+        message = err.message;
     }
 
-    // Log unexpected errors for developers
-    if (statusCode === 500) {
-        logger.error({ err }, 'Unexpected Error');
+    // Global Log Structure
+    const logData = {
+        err,
+        request: {
+            method,
+            url,
+            userId: user?.id,
+            body: method !== 'GET' ? req.body : undefined
+        }
+    };
+
+    if (statusCode >= 500) {
+        logger.error(logData, `[SERVER_ERROR] ${message}`);
     } else {
-        logger.warn({ err }, `Request Error: ${message}`);
+        logger.warn(logData, `[REQUEST_ERROR] ${message}`);
     }
 
     res.status(statusCode).json({
         status: 'error',
-        message: process.env.NODE_ENV === 'development' ? err.stack : message
+        message: process.env.NODE_ENV === 'development' ? err.message : message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 };

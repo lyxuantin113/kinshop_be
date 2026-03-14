@@ -16,11 +16,11 @@ export const UpdateOrderStatusSchema = z.object({
 });
 
 export const OrderQuerySchema = z.object({
-    page: z.preprocess((val) => Number(val), z.number().min(1).default(1)),
-    limit: z.preprocess((val) => Number(val), z.number().min(1).max(100).default(10)),
+    page: z.preprocess((val) => val ? Number(val) : 1, z.number().min(1).default(1)),
+    limit: z.preprocess((val) => val ? Number(val) : 10, z.number().min(1).max(100).default(10)),
     status: z.nativeEnum(OrderStatus).optional(),
     userId: z.string().uuid().optional(),
-}).partial();
+});
 
 export type PreviewCheckoutInput = z.infer<typeof PreviewCheckoutSchema>;
 export type CheckoutInput = z.infer<typeof CheckoutSchema>;
