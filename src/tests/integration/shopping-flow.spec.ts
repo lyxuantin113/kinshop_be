@@ -85,7 +85,7 @@ describe('Shopping Flow Integration', () => {
 
             // Simulate simultaneous checkout
             const results = await Promise.allSettled(
-                users.map(user => orderService.checkout(user.id))
+                users.map(user => orderService.checkout(user.id, { address: 'test', phoneNumber: '123' }))
             );
 
             const fulfilled = results.filter(r => r.status === 'fulfilled');
@@ -109,7 +109,7 @@ describe('Shopping Flow Integration', () => {
             await createTestDiscount('SAVE10', 'PERCENTAGE', 10); // 10% off
 
             await cartService.addToCart(user.id, { productId: prod.id, quantity: 1 });
-            const order = await orderService.checkout(user.id, 'SAVE10');
+            const order = await orderService.checkout(user.id, { address: 'test', phoneNumber: '123' }, 'SAVE10');
 
             // Subtotal 50 + Shipping 5 - Discount 5 = 50
             expect(Number(order.subtotal)).toBe(50);
@@ -141,8 +141,8 @@ describe('Shopping Flow Integration', () => {
 
             // Simultaneous checkout using the same coupon
             const results = await Promise.allSettled([
-                orderService.checkout(user1.id, 'LIMITED'),
-                orderService.checkout(user2.id, 'LIMITED')
+                orderService.checkout(user1.id, { address: 'test', phoneNumber: '123' }, 'LIMITED'),
+                orderService.checkout(user2.id, { address: 'test', phoneNumber: '123' }, 'LIMITED')
             ]);
 
             const fulfilled = results.filter(r => r.status === 'fulfilled');
@@ -160,7 +160,7 @@ describe('Shopping Flow Integration', () => {
             const prod = await createTestProduct(cat.id, 'Laptop', 1000, 10);
 
             await cartService.addToCart(user.id, { productId: prod.id, quantity: 1 });
-            await orderService.checkout(user.id);
+            await orderService.checkout(user.id, { address: 'test', phoneNumber: '123' });
 
             const orders = await orderService.getMyOrders(user.id);
             expect(orders).toHaveLength(1);

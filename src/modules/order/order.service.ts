@@ -16,7 +16,7 @@ export class OrderService {
         private readonly discountService: DiscountService
     ) { }
 
-    async checkout(userId: string, shippingInfo: { address: string; phoneNumber: string }, couponCode?: string): Promise<Order> {
+    async previewCheckout(userId: string, couponCode?: string) {
         const cart = await this.cartRepository.getByUserId(userId);
         if (!cart || cart.items.length === 0) {
             throw new AppError('Cart is empty', 400);
@@ -50,6 +50,21 @@ export class OrderService {
         }
 
         const totalAmount = subtotal + shippingFee - discountAmount;
+
+        return {
+            cart,
+            subtotal,
+            shippingFee,
+            discountAmount,
+            discountId,
+            discountToUpdate,
+            totalAmount,
+            orderItemsData
+        };
+    }
+
+    async checkout(userId: string, shippingInfo: { address: string; phoneNumber: string }, couponCode?: string): Promise<Order> {
+        const { cart, subtotal, shippingFee, discountAmount, discountId, discountToUpdate, totalAmount, orderItemsData } = await this.previewCheckout(userId, couponCode);
 
         return await prisma.$transaction(async (tx) => {
             const order = await tx.order.create({

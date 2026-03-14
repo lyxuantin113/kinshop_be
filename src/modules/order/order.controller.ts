@@ -7,6 +7,25 @@ import { OrderStatus } from '@prisma/client';
 export class OrderController {
     constructor(private readonly orderService: OrderService) { }
 
+    previewCheckout = asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?.id;
+        if (!userId) throw new AppError('Unauthorized', 401);
+
+        const { couponCode } = req.body || {};
+
+        const summary = await this.orderService.previewCheckout(userId, couponCode);
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                subtotal: summary.subtotal,
+                shippingFee: summary.shippingFee,
+                discountAmount: summary.discountAmount,
+                totalAmount: summary.totalAmount
+            }
+        });
+    });
+
     checkout = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.user?.id;
         if (!userId) throw new AppError('Unauthorized', 401);

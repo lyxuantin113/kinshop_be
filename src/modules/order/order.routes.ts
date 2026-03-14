@@ -29,6 +29,7 @@ const orderController = new OrderController(orderService);
 router.use(protect);
 
 // Public User Routes
+router.post('/preview-checkout', orderController.previewCheckout);
 router.post('/checkout', orderController.checkout);
 router.get('/my-orders', orderController.getMyOrders);
 

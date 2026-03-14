@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import { AppError } from '../errors/app-error';
+import { Request, Response } from 'express';
 
 /**
  * Standard Rate Limiter - 100 requests per 15 minutes
@@ -7,7 +8,7 @@ import { AppError } from '../errors/app-error';
 export const standardRateLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 500,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: (req: Request) => process.env.NODE_ENV === 'test' || req.user?.role === 'ADMIN',
     message: {
         status: 'fail',
         message: 'Too many requests from this IP, please try again after 15 minutes'
@@ -23,7 +24,7 @@ export const standardRateLimiter = rateLimit({
 export const authRateLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 20,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: (req: Request) => process.env.NODE_ENV === 'test' || req.user?.role === 'ADMIN',
     handler: (req, res, next, options) => {
         throw new AppError(options.message.message, 429);
     },
