@@ -4,6 +4,7 @@ import { CategorySchema } from './category.dto';
 import { PaginationQuerySchema } from '../../common/dto/pagination.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
+import { ApiResponse } from '../../common/utils/api-response';
 
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
@@ -11,13 +12,13 @@ export class CategoryController {
     create = asyncHandler(async (req: Request, res: Response) => {
         const validatedData = CategorySchema.parse(req.body);
         const category = await this.categoryService.createCategory(validatedData);
-        res.status(201).json({ data: category });
+        return ApiResponse.success(res, category, 201);
     });
 
     getAll = asyncHandler(async (req: Request, res: Response) => {
         const { page, limit } = PaginationQuerySchema.parse(req.query);
         const result = await this.categoryService.getAllCategories({ page, limit });
-        res.status(200).json(result);
+        return ApiResponse.paginated(res, result.data, result.meta);
     });
 
     getOne = asyncHandler(async (req: Request, res: Response) => {
@@ -26,19 +27,19 @@ export class CategoryController {
         if (!category) {
             throw new AppError('Category not found', 404);
         }
-        res.status(200).json({ data: category });
+        return ApiResponse.success(res, category);
     });
 
     update = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const validatedData = CategorySchema.partial().parse(req.body);
         const category = await this.categoryService.updateCategory(id, validatedData);
-        res.status(200).json({ data: category });
+        return ApiResponse.success(res, category);
     });
 
     delete = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         await this.categoryService.deleteCategory(id);
-        res.status(204).send();
+        return ApiResponse.noContent(res);
     });
 }

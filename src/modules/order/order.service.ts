@@ -7,6 +7,7 @@ import prisma from '../../config/database';
 import { AppError } from '../../common/errors/app-error';
 import { Order, OrderStatus } from '@prisma/client';
 import eventEmitter from '../../common/events/event-emitter';
+import { PaginatedResponse, getPaginationMeta } from '../../common/utils/pagination';
 
 export class OrderService {
     constructor(
@@ -155,8 +156,12 @@ export class OrderService {
         return order;
     }
 
-    async getAllOrders(params: { page: number; limit: number; status?: OrderStatus; userId?: string }) {
-        return this.orderRepository.findAll(params);
+    async getAllOrders(params: { page: number; limit: number; status?: OrderStatus; userId?: string }): Promise<PaginatedResponse<Order>> {
+        const { data, total } = await this.orderRepository.findAll(params);
+        return {
+            data,
+            meta: getPaginationMeta(total, params.page, params.limit)
+        };
     }
 
     async getAdminOrderDetails(orderId: string): Promise<Order> {

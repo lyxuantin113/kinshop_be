@@ -4,6 +4,7 @@ import { RegisterSchema, LoginSchema } from './user.dto';
 import { PaginationQuerySchema } from '../../common/dto/pagination.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
+import { ApiResponse } from '../../common/utils/api-response';
 
 export class UserController {
     constructor(private readonly userService: UserService) { }
@@ -12,10 +13,7 @@ export class UserController {
         const validatedData = RegisterSchema.parse(req.body);
         const user = await this.userService.register(validatedData);
 
-        res.status(201).json({
-            status: 'success',
-            data: user,
-        });
+        return ApiResponse.success(res, user, 201);
     });
 
     login = asyncHandler(async (req: Request, res: Response) => {
@@ -31,12 +29,9 @@ export class UserController {
 
         res.cookie('refreshToken', refreshToken, cookieOptions);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                user,
-                accessToken
-            },
+        return ApiResponse.success(res, {
+            user,
+            accessToken
         });
     });
 
@@ -53,7 +48,8 @@ export class UserController {
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' as any
         });
-        res.status(200).json({ status: 'success', message: 'Logged out successfully' });
+        
+        return ApiResponse.success(res, { message: 'Logged out successfully' });
     });
 
     refresh = asyncHandler(async (req: Request, res: Response) => {
@@ -73,26 +69,20 @@ export class UserController {
 
         res.cookie('refreshToken', tokens.refreshToken, cookieOptions);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                accessToken: tokens.accessToken
-            }
+        return ApiResponse.success(res, {
+            accessToken: tokens.accessToken
         });
     });
 
     getAll = asyncHandler(async (req: Request, res: Response) => {
         const { page, limit } = PaginationQuerySchema.parse(req.query);
         const result = await this.userService.getAllUsers({ page, limit });
-        res.status(200).json(result);
+        return ApiResponse.paginated(res, result.data, result.meta);
     });
 
     delete = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         await this.userService.deleteUser(id);
-        res.status(204).json({
-            status: 'success',
-            data: null
-        });
+        return ApiResponse.success(res, null);
     });
 }

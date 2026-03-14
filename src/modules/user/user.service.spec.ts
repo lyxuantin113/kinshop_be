@@ -143,7 +143,7 @@ describe('UserService', () => {
             const result = await userService.getAllUsers({ page: 1, limit: 10 });
 
             expect(result.data).toHaveLength(1);
-            expect(result.meta.totalItems).toBe(1);
+            expect(result.meta.total).toBe(1);
             expect((result.data[0] as any).password).toBeUndefined();
         });
     });

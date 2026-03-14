@@ -3,6 +3,7 @@ import { CartService } from './cart.service';
 import { AddToCartSchema, UpdateCartItemSchema } from './cart.dto';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
+import { ApiResponse } from '../../common/utils/api-response';
 
 export class CartController {
     constructor(private readonly cartService: CartService) { }
@@ -14,12 +15,9 @@ export class CartController {
         const cart = await this.cartService.getOrCreateCart(userId);
         const summary = this.cartService.calculateCartTotal(cart);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                ...cart,
-                summary
-            }
+        return ApiResponse.success(res, {
+            ...cart,
+            summary
         });
     });
 
@@ -31,12 +29,9 @@ export class CartController {
         const cart = await this.cartService.addToCart(userId, validatedData);
         const summary = this.cartService.calculateCartTotal(cart);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                ...cart,
-                summary
-            }
+        return ApiResponse.success(res, {
+            ...cart,
+            summary
         });
     });
 
@@ -50,12 +45,9 @@ export class CartController {
         const cart = await this.cartService.updateItemQuantity(userId, productId, validatedData);
         const summary = this.cartService.calculateCartTotal(cart);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                ...cart,
-                summary
-            }
+        return ApiResponse.success(res, {
+            ...cart,
+            summary
         });
     });
 
@@ -67,12 +59,9 @@ export class CartController {
         const cart = await this.cartService.removeItem(userId, productId);
         const summary = this.cartService.calculateCartTotal(cart);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                ...cart,
-                summary
-            }
+        return ApiResponse.success(res, {
+            ...cart,
+            summary
         });
     });
 
@@ -81,9 +70,6 @@ export class CartController {
         if (!userId) throw new AppError('Unauthorized', 401);
 
         await this.cartService.clearCart(userId);
-        res.status(200).json({
-            status: 'success',
-            message: 'Cart cleared successfully'
-        });
+        return ApiResponse.success(res, { message: 'Cart cleared successfully' });
     });
 }

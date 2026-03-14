@@ -69,7 +69,7 @@ export class OrderRepository {
             prisma.order.count({ where })
         ]);
 
-        return { orders, total };
+        return { data: orders, total };
     }
 
     async updateStatus(id: string, status: OrderStatus): Promise<Order> {

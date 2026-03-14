@@ -2,11 +2,10 @@
  * Standard Pagination Metadata
  */
 export interface PaginationMeta {
-    totalItems: number;
-    itemCount: number;
-    itemsPerPage: number;
+    total: number;
+    page: number;
+    limit: number;
     totalPages: number;
-    currentPage: number;
 }
 
 /**
@@ -21,16 +20,15 @@ export interface PaginatedResponse<T> {
  * Pagination Utility: Calculates metadata based on total count and current page/limit
  */
 export const getPaginationMeta = (
-    totalItems: number,
+    total: number,
     page: number,
     limit: number
 ): PaginationMeta => {
-    const totalPages = Math.ceil(totalItems / limit);
+    const totalPages = Math.ceil(total / limit);
     return {
-        totalItems,
-        itemCount: limit, // In a real scenario, this could be data.length
-        itemsPerPage: limit,
+        total,
+        page,
+        limit,
         totalPages,
-        currentPage: page,
     };
 };

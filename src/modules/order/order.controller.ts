@@ -3,6 +3,7 @@ import { OrderService } from './order.service';
 import { asyncHandler } from '../../common/middleware/async-handler';
 import { AppError } from '../../common/errors/app-error';
 import { OrderStatus } from '@prisma/client';
+import { ApiResponse } from '../../common/utils/api-response';
 import { CheckoutSchema, OrderQuerySchema, PreviewCheckoutSchema, UpdateOrderStatusSchema } from './order.dto';
 
 export class OrderController {
@@ -16,14 +17,11 @@ export class OrderController {
 
         const summary = await this.orderService.previewCheckout(userId, couponCode);
 
-        res.status(200).json({
-            status: 'success',
-            data: {
-                subtotal: summary.subtotal,
-                shippingFee: summary.shippingFee,
-                discountAmount: summary.discountAmount,
-                totalAmount: summary.totalAmount
-            }
+        return ApiResponse.success(res, {
+            subtotal: summary.subtotal,
+            shippingFee: summary.shippingFee,
+            discountAmount: summary.discountAmount,
+            totalAmount: summary.totalAmount
         });
     });
 
@@ -35,10 +33,7 @@ export class OrderController {
 
         const order = await this.orderService.checkout(userId, { address, phoneNumber }, couponCode);
 
-        res.status(201).json({
-            status: 'success',
-            data: order
-        });
+        return ApiResponse.success(res, order, 201);
     });
 
     getMyOrders = asyncHandler(async (req: Request, res: Response) => {
@@ -47,10 +42,7 @@ export class OrderController {
 
         const orders = await this.orderService.getMyOrders(userId);
 
-        res.status(200).json({
-            status: 'success',
-            data: orders
-        });
+        return ApiResponse.success(res, orders);
     });
 
     getOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -60,10 +52,7 @@ export class OrderController {
         const orderId = req.params.orderId as string;
         const order = await this.orderService.getOrderDetails(orderId, userId);
 
-        res.status(200).json({
-            status: 'success',
-            data: order
-        });
+        return ApiResponse.success(res, order);
     });
 
     // Admin Endpoints
@@ -72,10 +61,7 @@ export class OrderController {
 
         const result = await this.orderService.getAllOrders({ page, limit, status, userId });
 
-        res.status(200).json({
-            status: 'success',
-            ...result
-        });
+        return ApiResponse.paginated(res, result.data, result.meta);
     });
 
     updateStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -84,28 +70,19 @@ export class OrderController {
 
         const order = await this.orderService.updateStatus(orderId, status);
 
-        res.status(200).json({
-            status: 'success',
-            data: order
-        });
+        return ApiResponse.success(res, order);
     });
 
     getAdminOrder = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.orderId as string;
         const order = await this.orderService.getAdminOrderDetails(orderId);
 
-        res.status(200).json({
-            status: 'success',
-            data: order
-        });
+        return ApiResponse.success(res, order);
     });
 
     getStats = asyncHandler(async (req: Request, res: Response) => {
         const stats = await this.orderService.getDashboardStats();
 
-        res.status(200).json({
-            status: 'success',
-            data: stats
-        });
+        return ApiResponse.success(res, stats);
     });
 }
