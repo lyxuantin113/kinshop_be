@@ -1,0 +1,14 @@
+# Phase 3: Synchronous Communication (gRPC).
+Key implementations:
+- gRPC Proto Definitions: Created identity.proto and catalog.proto for inter-service communication.
+- gRPC Servers: Implemented Identity and Catalog gRPC servers with full type safety and error mapping.
+- gRPC Clients: Integrated IdentityGrpcClient and CatalogGrpcClient into the Order and Cart domains.
+- Service Refactoring: Completely decoupled OrderService and CartService from direct cross-domain Prisma reads. All data enrichment (User/Product details) and dashboard statistics are now fetched via synchronous gRPC calls.
+- Build Verification: Confirmed that the entire project builds successfully (npm run build) with zero TypeScript errors.
+
+# Phase 4: Asynchronous Communication (Kafka).
+* IMPORTANT - Kafka Environment: This implementation assumes a Kafka broker is running at localhost:9092. Please ensure Kafka and Zookeeper (or KRaft) are started before testing. Outbox Polling: I will use a simple setInterval polling mechanism for the Outbox worker as a baseline. For production, a Change Data Capture (CDC) tool like Debezium would be preferred.
+Key updates:
+- Status Alignment: Removed the CONFIRMED status. The order now transitions directly to PAID upon successful stock reservation in the Saga flow.
+- Topic Standardized: Updated Kafka topics to use order.paid (mapped from ORDER_PAID outbox events).
+- Build Verified: Rebuilt the @kinshop/shared library and the main application successfully. All references to CONFIRMED have been removed from the source code.
